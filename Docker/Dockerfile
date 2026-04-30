@@ -25,7 +25,7 @@
 
 FROM ubuntu:24.04 AS devel
 
-ARG BRANCH=v7.9.1
+ARG BRANCH=main
 
 # GNU compiler
 RUN apt-get update -y && \
