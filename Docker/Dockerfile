@@ -25,7 +25,7 @@
 
 FROM ubuntu:24.04 AS devel
 
-ARG BRANCH=main
+ARG BRANCH=v7.9.1
 
 # GNU compiler
 RUN apt-get update -y && \
@@ -134,6 +134,8 @@ COPY --from=devel /usr/local/EXP/bin /usr/local/EXP/bin
 
 COPY --from=devel /usr/local/EXP/lib /usr/local/EXP/lib
 
+COPY --from=devel /usr/local/EXP/include /usr/local/EXP/include 
+
 RUN mkdir -p /var/www/html && \
     cd /var/www/html && \
     wget -r -nH --cut-dirs=1 https://exp-code.github.io/EXP-docs/
@@ -160,17 +162,24 @@ RUN apt-get update -y && \
         python3-setuptools \
         python3-wheel && \
     rm -rf /var/lib/apt/lists/*
-RUN /opt/venv/bin/pip3 --no-cache-dir install numpy scipy matplotlib jupyter h5py mpi4py PyYAML k3d pandas astropy gala galpy pynbody jupyterlab jupyterhub ipyparallel
+
+RUN /opt/venv/bin/pip3 --no-cache-dir install numpy scipy matplotlib jupyter h5py mpi4py PyYAML k3d pandas astropy galpy pynbody jupyterlab jupyterhub ipyparallel
 
 RUN pip3 install --config-settings --build-option=--yes --no-build-isolation agama
+
+# Install gala from source with EXP support
+RUN cd /usr/local && \ 
+    export GIT_SSL_NO_VERIFY=1 && \
+    git clone https://github.com/adrn/gala.git && \
+    cd gala && \
+    export GALA_EXP_PREFIX=/usr/local/EXP/ && \
+    python3 -m pip install -ve .
 
 RUN cd /usr/local && \
     export GIT_SSL_NO_VERIFY=1 && \
     git clone https://github.com/EXP-code/EXP-examples EXP-examples && \
     git clone https://github.com/EXP-code/pyEXP-examples pyEXP-examples && \
-    git clone https://github.com/EXP-code/EXP-tools && \
-    cd pyEXP-examples && \
-    git checkout haloVel
+    git clone https://github.com/EXP-code/EXP-tools
 
 RUN chmod -R 777 /opt/venv && \
     chmod -R 777 /usr/local/pyEXP-examples && \
